@@ -1,47 +1,74 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-const jwt = require('jsonwebtoken');
+const morgan = require('morgan');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.GATEWAY_PORT || 5000;
 
-// Microservice Targets
+// ✅ Microservice Targets
 const services = {
-  users: 'http://localhost:5001',
-  products: 'http://localhost:5002',
-  orders: 'http://localhost:5003',
+    users: 'http://localhost:5001',
+    products: 'http://localhost:5002',
+    orders: 'http://localhost:5003',
 };
 
-// Middleware for JSON Parsing & CORS
-app.use(express.json());
+// ✅ Middleware
 app.use(cors());
+app.use(express.json());
+app.use(morgan('dev'));
 
-// Authentication Middleware
-function verifyToken(req, res, next) {
-  const token = req.header('Authorization');
-  if (!token) return res.status(401).json({ message: 'Access Denied. No token provided.' });
-
-  try {
-    const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-    req.user = decoded;
+// ✅ Log every incoming request
+app.use((req, res, next) => {
+    console.log('\n==========================================');
+    console.log(`[API Gateway] Incoming Request: ${req.method} ${req.originalUrl}`);
+    console.log(`[API Gateway] Headers:`, req.headers);
+    console.log(`[API Gateway] Body:`, req.body);
     next();
-  } catch (err) {
-    res.status(400).json({ message: 'Invalid Token' });
+});
+
+// ✅ Function to forward requests
+const forwardRequest = async (serviceName, req, res) => {
+  try {
+      // Keep the full path `/api/users/login`
+      const serviceUrl = services[serviceName] + req.originalUrl;
+      console.log(`[API Gateway] Forwarding ${req.method} request to ${serviceName}: ${serviceUrl}`);
+
+      // Forward the request to User Service
+      const response = await axios({
+          method: req.method,
+          url: serviceUrl,
+          headers: { ...req.headers, host: undefined },
+          data: req.body,
+      });
+
+      console.log(`[API Gateway] Response from ${serviceName}: Status ${response.status}`);
+      res.status(response.status).json(response.data);
+  } catch (error) {
+      console.error(`[API Gateway] Error forwarding request to ${serviceName}:`, error.message);
+
+      if (error.response) {
+          console.log(`[API Gateway] Error Response Data:`, error.response.data);
+          res.status(error.response.status).json(error.response.data);
+      } else {
+          res.status(500).json({ error: `Gateway error: ${error.message}` });
+      }
   }
-}
+};
 
-// User Service Proxy
-app.use('/api/users', createProxyMiddleware({ target: services.users, changeOrigin: true }));
 
-// Product Service Proxy (Protected)
-app.use('/api/products', verifyToken, createProxyMiddleware({ target: services.products, changeOrigin: true }));
+// ✅ API Gateway Routes (Manual Forwarding)
+app.use('/api/users', (req, res) => forwardRequest('users', req, res));
+app.use('/api/products', (req, res) => forwardRequest('products', req, res));
+app.use('/api/orders', (req, res) => forwardRequest('orders', req, res));
 
-// Order Service Proxy (Protected)
-app.use('/api/orders', verifyToken, createProxyMiddleware({ target: services.orders, changeOrigin: true }));
+// ✅ Root Endpoint
+app.get('/', (req, res) => {
+    res.send('API Gateway is Running...');
+});
 
-// Start API Gateway
+// ✅ Log when API Gateway starts
 app.listen(PORT, () => {
-  console.log(`API Gateway running on http://localhost:${PORT}`);
+    console.log(`[API Gateway] Running on http://localhost:${PORT}`);
 });
