@@ -7,19 +7,19 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.GATEWAY_PORT || 5000;
 
-// ✅ Microservice Targets
+// Microservice Targets
 const services = {
     users: 'http://localhost:5001',
     products: 'http://localhost:5002',
     orders: 'http://localhost:5003',
 };
 
-// ✅ Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// ✅ Log every incoming request
+// Log every incoming request
 app.use((req, res, next) => {
     console.log('\n==========================================');
     console.log(`[API Gateway] Incoming Request: ${req.method} ${req.originalUrl}`);
@@ -28,7 +28,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ Function to forward requests
+// Function to forward requests
 const forwardRequest = async (serviceName, req, res) => {
   try {
       // Keep the full path `/api/users/login`
@@ -58,17 +58,17 @@ const forwardRequest = async (serviceName, req, res) => {
 };
 
 
-// ✅ API Gateway Routes (Manual Forwarding)
+// API Gateway Routes (Manual Forwarding)
 app.use('/api/users', (req, res) => forwardRequest('users', req, res));
 app.use('/api/products', (req, res) => forwardRequest('products', req, res));
 app.use('/api/orders', (req, res) => forwardRequest('orders', req, res));
 
-// ✅ Root Endpoint
+// Root Endpoint
 app.get('/', (req, res) => {
     res.send('API Gateway is Running...');
 });
 
-// ✅ Log when API Gateway starts
+// Log when API Gateway starts
 app.listen(PORT, () => {
     console.log(`[API Gateway] Running on http://localhost:${PORT}`);
 });

@@ -9,12 +9,12 @@ const authRoutes = require('./routes/authRoutes');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// ✅ Middleware
+// Middleware
 app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
-// ✅ Log every request received
+// Log every request received
 app.use((req, res, next) => {
     console.log('\n==========================================');
     console.log(`[User Service] Incoming Request: ${req.method} ${req.originalUrl}`);
@@ -23,10 +23,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ Routes
+// Routes
 app.use('/api/users', authRoutes);
 
-// ✅ Log when User Service sends a response
+// Log when User Service sends a response
 app.use((req, res, next) => {
     res.on('finish', () => {
         console.log(`[User Service] Response Sent: Status ${res.statusCode}`);
@@ -34,13 +34,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ Database Connection
+// Database Connection
 mongoose
     .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// ✅ Start Server
+// Start Server
 app.listen(PORT, () => {
     console.log(`User Service running on http://localhost:${PORT}`);
 });

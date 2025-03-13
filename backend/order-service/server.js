@@ -9,12 +9,12 @@ const orderRoutes = require('./routes/orderRoutes');
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-// ✅ Middleware
+// Middleware
 app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
-// ✅ Log Incoming Requests
+// Log Incoming Requests
 app.use((req, res, next) => {
     console.log('\n==========================================');
     console.log(`[Order Service] Incoming Request: ${req.method} ${req.originalUrl}`);
@@ -23,16 +23,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// ✅ Routes
+// Routes
 app.use('/api/orders', orderRoutes);
 
-// ✅ Database Connection
+// Database Connection
 mongoose
     .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected for Order Service'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// ✅ Start Server
+// Start Server
 app.listen(PORT, () => {
     console.log(`Order Service running on http://localhost:${PORT}`);
 });

@@ -14,10 +14,11 @@ const Login = () => {
     try {
         console.log('Logging in...');
         const res = await axios.post(
-            'http://localhost:5001/api/users/login',
+            'http://localhost:5000/api/users/login',
             { email, password }, // Sending as JSON
             { headers: { 'Content-Type': 'application/json' } } // Explicitly setting JSON content type
         );
+
         // Print the full response object
         console.log("Full Response:", res);
 
@@ -26,7 +27,7 @@ const Login = () => {
   
         if (res.data.token) {
             login(res.data.token);
-            navigate('/products', { replace: true });
+            navigate('/products', { replace: true }); // Navigate to /products page upon login
         } else {
             alert('Login failed. No token received.');
         }
