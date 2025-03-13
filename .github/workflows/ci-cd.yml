@@ -21,13 +21,16 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies (Backend)
+      # ✅ Clear previous dependencies (to avoid corrupt installations)
+      - name: Clean Install Dependencies (Backend)
         run: |
+          rm -rf backend/node_modules backend/package-lock.json
           cd backend
           npm install
 
-      - name: Install dependencies (Frontend)
+      - name: Clean Install Dependencies (Frontend)
         run: |
+          rm -rf frontend/node_modules frontend/package-lock.json
           cd frontend
           npm install
 
